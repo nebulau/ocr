@@ -5,6 +5,7 @@ from PIL import Image
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import time
+import ocr
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 start = time.clock()
@@ -282,7 +283,7 @@ if __name__ == "__main__":
     # out=[]
     # i=0
     # for image in image_list:
-    #     if(i==50):
+    #     if(i==5000):
     #         break
     #     out.append(test(image))
     #     tf.reset_default_graph()
@@ -291,9 +292,11 @@ if __name__ == "__main__":
     # i=0
     # j=0
     # for i in range(len(label_list)):
-    #     if(i==40):
+    #     if(i==5000):
     #         break
     #     if(out[i]==label_list[i]):
     #         j=j+1
 
     # print('accuracy is %.2f'%(j/i))
+    # ocr = ocr.OCR()
+    # print(ocr.test('./test/31.png'))
