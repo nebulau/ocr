@@ -224,7 +224,6 @@ def test(test_file):
             global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
             #调用saver.restore()函数，加载训练好的网络模型
             saver.restore(sess, ckpt.model_checkpoint_path)
-            print('Loading success')
         else:
             print('No checkpoint')
         prediction = sess.run(logits, feed_dict={x: image_arr})
@@ -234,9 +233,8 @@ def test(test_file):
         print(max_index)
         # print('the prediction is:')
         # print(prediction)
-
         # print('This is a %d' %max_index + ' with possibility %.6f' %prediction[:, 0])
-        print_time()
+        
         return max_index
 
 if __name__ == "__main__":
@@ -244,7 +242,7 @@ if __name__ == "__main__":
     data = pickle.load(open('map.pkl','rb'))  
 
     N_CLASSES = 10
-    BATCH_SIZE = 800
+    BATCH_SIZE = 7900
     CAPACITY = 64
     IMG_W = 28  #图片的宽和高
     IMG_H = 8
@@ -275,28 +273,33 @@ if __name__ == "__main__":
     #         coord.request_stop()
     #     coord.join(threads)
 
-    run_training()
+    # run_training()
     # test('./test/30.png')
     # tf.reset_default_graph()
 
     # 测试准确率
-    # out=[]
-    # i=0
-    # for image in image_list:
-    #     if(i==5000):
-    #         break
-    #     out.append(test(image))
-    #     tf.reset_default_graph()
-    #     i=i+1
+    # start = time.clock()
+    out=[]
+    ocr = ocr.OCR()
+    i=0
+    for image in image_list:
+        if(i==7000):
+            break
+        out.append(ocr.test(image))
+        # tf.reset_default_graph()
+        i=i+1
+    # print_time()
+    i=0
+    j=0
+    for i in range(len(label_list)):
+        if(i==7000):
+            break
+        if(out[i]==label_list[i]):
+            j=j+1
 
-    # i=0
-    # j=0
-    # for i in range(len(label_list)):
-    #     if(i==5000):
-    #         break
-    #     if(out[i]==label_list[i]):
-    #         j=j+1
+    print('accuracy is %.2f'%(j/i))
+    # start = time.clock()
 
-    # print('accuracy is %.2f'%(j/i))
     # ocr = ocr.OCR()
-    # print(ocr.test('./test/31.png'))
+    # print(ocr.test_all(image_list[0:500]))
+    # print_time()

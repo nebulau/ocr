@@ -17,7 +17,7 @@ class OCR():
 
     def inference(self, images, batch_size, n_classes):
         # conv1, shape = [kernel_size, kernel_size, channels, kernel_numbers]
-        with tf.variable_scope("conv1", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("conv1") as scope:
             weights = tf.get_variable("weights",
                                       shape=[3, 3, 3, 16],
                                       dtype=tf.float32,
@@ -31,13 +31,13 @@ class OCR():
             # 这里用relu激活函数
             conv1 = tf.nn.relu(pre_activation, name="conv1")
         # pool1 && norm1
-        with tf.variable_scope("pooling1_lrn", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("pooling1_lrn") as scope:
             pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
                                    padding="SAME", name="pooling1")
             norm1 = tf.nn.lrn(pool1, depth_radius=4, bias=1.0, alpha=0.001 / 9.0,
                               beta=0.75, name='norm1')
         # conv2
-        with tf.variable_scope("conv2", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("conv2") as scope:
             weights = tf.get_variable("weights",
                                       shape=[3, 3, 16, 16],
                                       dtype=tf.float32,
@@ -50,13 +50,13 @@ class OCR():
             pre_activation = tf.nn.bias_add(conv, biases)
             conv2 = tf.nn.relu(pre_activation, name="conv2")
         # pool2 && norm2
-        with tf.variable_scope("pooling2_lrn", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("pooling2_lrn") as scope:
             pool2 = tf.nn.max_pool(conv2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
                                    padding="SAME", name="pooling2")
             norm2 = tf.nn.lrn(pool2, depth_radius=4, bias=1.0, alpha=0.001 / 9.0,
                               beta=0.75, name='norm2')
         # full-connect1
-        with tf.variable_scope("fc1", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("fc1") as scope:
             reshape = tf.reshape(norm2, shape=[batch_size, -1])
             dim = reshape.get_shape()[1].value
             weights = tf.get_variable("weights",
@@ -69,7 +69,7 @@ class OCR():
                                      initializer=tf.constant_initializer(0.1))
             fc1 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name="fc1")
         # full_connect2
-        with tf.variable_scope("fc2", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("fc2") as scope:
             weights = tf.get_variable("weights",
                                       shape=[128, 128],
                                       dtype=tf.float32,
@@ -80,7 +80,7 @@ class OCR():
                                      initializer=tf.constant_initializer(0.1))
             fc2 = tf.nn.relu(tf.matmul(fc1, weights) + biases, name="fc2")
         # softmax
-        with tf.variable_scope("softmax_linear", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("softmax_linear") as scope:
             weights = tf.get_variable("weights",
                                       shape=[128, n_classes],
                                       dtype=tf.float32,
@@ -126,6 +126,7 @@ class OCR():
         return image_arr
 
     def test(self, test_file):
+        # tf.Graph().as_default()
         image_arr = self.get_one_image(test_file)
         image = tf.cast(image_arr, tf.float32)
         image = tf.image.per_image_standardization(image)
@@ -136,12 +137,14 @@ class OCR():
         x = tf.placeholder(tf.float32, shape=[28, 8, 3])
         saver = tf.train.Saver()
 
-        saver.restore(self.sess, self.ckpt.model_checkpoint_path)
+        sess = tf.Session()
+        saver.restore(sess, self.ckpt.model_checkpoint_path)
 
-        prediction = self.sess.run(logits, feed_dict={x: image_arr})
+        prediction = sess.run(logits, feed_dict={x: image_arr})
 
         max_index = np.argmax(prediction)
         print('the label is:%d' % max_index)
+        tf.reset_default_graph()
         return max_index
         # print('the prediction is:')
         # print(prediction)
@@ -152,12 +155,15 @@ class OCR():
         retlist = []
         for image in list:
             retlist.append(self.test(image))
+
         return retlist
 
 
 if __name__ == "__main__":
     ocr = OCR()
     print(ocr.test('./test/31.png'))
+    # tf.reset_default_graph()
+    
     # tf.reset_default_graph()
 
     imglist = ['./test/30.png', './test/31.png', './test/17.png']
